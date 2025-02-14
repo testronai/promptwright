@@ -1,5 +1,6 @@
 import os
 import asyncio
+import platform
 import streamlit as st
 from streamlit_ace import st_ace
 from services.browser_task_runner import BrowserTaskRunner, BrowserTaskExecutionError
@@ -14,6 +15,15 @@ from pathlib import Path
 import logging
 import sys
 import pandas as pd
+
+# Configure asyncio event loop for Windows
+if platform.system() == 'Windows':
+    # Use ProactorEventLoop on Windows
+    if isinstance(asyncio.get_event_loop(), asyncio.SelectorEventLoop):
+        loop = asyncio.ProactorEventLoop()
+        asyncio.set_event_loop(loop)
+    # Ensure we're using ProactorEventLoop
+    assert isinstance(asyncio.get_event_loop(), asyncio.ProactorEventLoop)
 
 def get_csv_download_link(df):
     """Generate a link allowing the data in a given pandas dataframe to be downloaded"""

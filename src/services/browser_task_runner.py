@@ -1,5 +1,7 @@
 import os
 import asyncio
+import sys
+import platform
 from pathlib import Path
 from dotenv import load_dotenv, find_dotenv
 from langchain_openai import ChatOpenAI
@@ -24,6 +26,18 @@ class BrowserTaskExecutionError(Exception):
 
 class BrowserTaskRunner:
     def __init__(self):
+        # Check if running Windows Store Python
+        if sys.version.find("Microsoft Store") != -1:
+            raise RuntimeError(
+                "\nError: You are running Python from the Microsoft Store which has limited functionality."
+                "\nPlease uninstall the Microsoft Store version and install Python from python.org instead:"
+                "\n1. Uninstall Python from Microsoft Store"
+                "\n2. Download and install Python from https://www.python.org/downloads/"
+                "\n3. Make sure to check 'Add Python to PATH' during installation"
+                "\n4. Restart your computer"
+                "\n5. Create a new virtual environment and reinstall the requirements"
+            )
+
         # Load .env file without clearing existing environment variables
         load_dotenv(find_dotenv(), override=True)
         
@@ -47,6 +61,15 @@ class BrowserTaskRunner:
         # Initialize config manager
         self.config_manager = ConfigManager()
         
+        # Configure event loop for Windows
+        if platform.system() == 'Windows':
+            # Use ProactorEventLoop on Windows
+            if isinstance(asyncio.get_event_loop(), asyncio.SelectorEventLoop):
+                loop = asyncio.ProactorEventLoop()
+                asyncio.set_event_loop(loop)
+            # Ensure we're using ProactorEventLoop
+            assert isinstance(asyncio.get_event_loop(), asyncio.ProactorEventLoop)
+
         # Initialize browser configuration
         browser_config = self._get_browser_config()
         logger.debug(f"Final Browser Config: {browser_config}")
@@ -254,6 +277,15 @@ class BrowserTaskRunner:
             gif_path = None
         
         logger.info(f"Initializing agent with gif_path: {gif_path}")
+
+        # Initialize agent with proper event loop handling
+        if platform.system() == 'Windows':
+            # Ensure we're using ProactorEventLoop for Windows
+            loop = asyncio.get_event_loop()
+            if not isinstance(loop, asyncio.ProactorEventLoop):
+                loop = asyncio.ProactorEventLoop()
+                asyncio.set_event_loop(loop)
+
         agent = Agent(
             task=task,
             llm=self.get_llm(),
@@ -296,7 +328,7 @@ class BrowserTaskRunner:
             except Exception as e:
                 logger.error(f"Agent task execution failed: {str(e)}")
                 logger.error(f"Error type: {type(e).__name__}")
-                logger.error(f"Error args: {e.args}")
+                logger.error(f"Error details: {e.args}")
                 # Clean up the timestamp folder since task failed
                 if timestamp_folder.exists():
                     logger.info(f"Cleaning up timestamp folder: {timestamp_folder}")
