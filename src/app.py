@@ -18,12 +18,16 @@ import pandas as pd
 
 # Configure asyncio event loop for Windows
 if platform.system() == 'Windows':
-    # Use ProactorEventLoop on Windows
-    if isinstance(asyncio.get_event_loop(), asyncio.SelectorEventLoop):
-        loop = asyncio.ProactorEventLoop()
-        asyncio.set_event_loop(loop)
-    # Ensure we're using ProactorEventLoop
-    assert isinstance(asyncio.get_event_loop(), asyncio.ProactorEventLoop)
+    try:
+        # Try to use WindowsSelectorEventLoopPolicy
+        if hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):
+            asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+        # Fallback to ProactorEventLoop if needed
+        else:
+            loop = asyncio.ProactorEventLoop()
+            asyncio.set_event_loop(loop)
+    except Exception as e:
+        logger.warning(f"Failed to set Windows event loop policy: {str(e)}")
 
 def get_csv_download_link(df):
     """Generate a link allowing the data in a given pandas dataframe to be downloaded"""

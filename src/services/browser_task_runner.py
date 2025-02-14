@@ -63,17 +63,28 @@ class BrowserTaskRunner:
         
         # Configure event loop for Windows
         if platform.system() == 'Windows':
-            # Use ProactorEventLoop on Windows
-            if isinstance(asyncio.get_event_loop(), asyncio.SelectorEventLoop):
-                loop = asyncio.ProactorEventLoop()
-                asyncio.set_event_loop(loop)
-            # Ensure we're using ProactorEventLoop
-            assert isinstance(asyncio.get_event_loop(), asyncio.ProactorEventLoop)
+            try:
+                # Try to use WindowsSelectorEventLoopPolicy
+                if hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):
+                    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+                # Fallback to ProactorEventLoop if needed
+                else:
+                    loop = asyncio.ProactorEventLoop()
+                    asyncio.set_event_loop(loop)
+            except Exception as e:
+                logger.warning(f"Failed to set Windows event loop policy: {str(e)}")
 
         # Initialize browser configuration
         browser_config = self._get_browser_config()
         logger.debug(f"Final Browser Config: {browser_config}")
-        self.browser = Browser(config=browser_config)
+        
+        try:
+            self.browser = Browser(config=browser_config)
+        except Exception as e:
+            logger.error(f"Failed to initialize browser: {str(e)}")
+            if platform.system() == 'Windows':
+                logger.error("On Windows, try running: playwright install-deps")
+            raise
         
         # Debug logging
         logger.debug("BrowserTaskRunner initialized")
@@ -280,11 +291,12 @@ class BrowserTaskRunner:
 
         # Initialize agent with proper event loop handling
         if platform.system() == 'Windows':
-            # Ensure we're using ProactorEventLoop for Windows
-            loop = asyncio.get_event_loop()
-            if not isinstance(loop, asyncio.ProactorEventLoop):
-                loop = asyncio.ProactorEventLoop()
-                asyncio.set_event_loop(loop)
+            try:
+                # Try to use WindowsSelectorEventLoopPolicy
+                if hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):
+                    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+            except Exception as e:
+                logger.warning(f"Failed to set Windows event loop policy: {str(e)}")
 
         agent = Agent(
             task=task,
