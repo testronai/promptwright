@@ -82,6 +82,35 @@ Promptwright is an AI-powered tool that transforms natural-language user prompts
      ```
    - Make sure Chrome is installed on your system for local browser execution
 
+## Installation Requirements
+
+### Windows Users Important Note:
+Do NOT use the Python installation from the Microsoft Store. Please follow these steps:
+
+1. If you have Python installed from Microsoft Store, uninstall it first
+2. Download Python from the official website: https://www.python.org/downloads/
+3. During installation, make sure to check "Add Python to PATH"
+4. Restart your computer after installation
+5. Create a new virtual environment and install the requirements
+
+This is necessary because the Microsoft Store version of Python has limitations that prevent Playwright from working correctly.
+
+### Playwright Installation Steps:
+After installing Python requirements, you need to install Playwright and its browser dependencies:
+
+```bash
+# Install Playwright
+pip install playwright
+
+# Install browser dependencies (Chromium, Firefox, Webkit)
+playwright install chromium
+
+# Install system dependencies (if needed)
+playwright install-deps
+```
+
+Note: On Windows, make sure to run these commands in an administrator command prompt if you encounter any permission issues.
+
 ## Running the Application
 
 Launch the Streamlit app with:
@@ -228,17 +257,4 @@ Feel free to:
 - Check existing issues and discussions before creating new ones
 
 Thank you for contributing to Promptwright! 🚀
-
-## Installation Requirements
-
-### Windows Users Important Note:
-Do NOT use the Python installation from the Microsoft Store. Please follow these steps:
-
-1. If you have Python installed from Microsoft Store, uninstall it first
-2. Download Python from the official website: https://www.python.org/downloads/
-3. During installation, make sure to check "Add Python to PATH"
-4. Restart your computer after installation
-5. Create a new virtual environment and install the requirements
-
-This is necessary because the Microsoft Store version of Python has limitations that prevent Playwright from working correctly.
 
